@@ -7,6 +7,7 @@ const dotenv = require("dotenv");
 const gravatar = require('gravatar');
 const path = require("path");
 const fs = require("fs/promises");
+const Jimp = require("jimp");
 
 dotenv.config();
 const {SECRET_KEY} = process.env;
@@ -74,7 +75,13 @@ const logout = async(req, res) => {
 
 const updateAvatar = async(req, res) => {
 const {_id} = req.user;
+if(!req.file) {
+    throw HttpError(400, "No file uploaded");
+}
 const {path: tempUpload, originalname} = req.file;
+const image = await Jimp.read(tempUpload);
+const resizedImage = await image.resize(250, 250);
+await resizedImage.writeAsync(tempUpload);
 const fileName = `${_id}_${originalname}`;
 const resultUpload = path.join(avatarsDir, fileName);
 await fs.rename(tempUpload, resultUpload);
